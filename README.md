@@ -16,6 +16,7 @@ meteor add pierreeric:rxscreenshot
 * [EventedMind's WaitList](https://www.eventedmind.com/feed/the-reactive-waitlist-data-structure)
 * [WaitList](https://github.com/iron-meteor/iron-controller/blob/master/lib/wait_list.js)
 * [html2canvas](http://html2canvas.hertzen.com/)
+* [cangv](https://github.com/gabelerner/canvg)
 
 ## FAQ
 ### Contributions
