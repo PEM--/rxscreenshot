@@ -2,9 +2,15 @@ head
   title Reactive screenshot - Test app
 body
   +textTest
+  +svgTest
 
 template(name='textTest')
   button Screenshot this
   div(data-role='screenshot')
     h1 Title test
     p Paragraph test
+
+template(name='svgTest')
+  button Screenshot this
+  br
+  svg.chart
