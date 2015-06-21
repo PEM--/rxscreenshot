@@ -17,7 +17,8 @@
   "dependencies": {
     "buffer": "3.46.1",
     "arraybuffer-to-buffer": "*",
-    "html2canvas": "0.5.0-alpha2"
+    "html2canvas": "0.5.0-alpha2",
+    "canvg-gabelerner": "*"
   },
   "ignoredDependencies": [
     "jquery"
@@ -25,6 +26,7 @@
   "overrides": {
     "buffer": { "arch": [ "client" ] },
     "arraybuffer-to-buffer": { "arch": [ "client" ] },
-    "html2canvas": { "arch": [ "client" ] }
+    "html2canvas": { "arch": [ "client" ] },
+    "canvg-gabelerner": { "arch": [ "client" ] }
   }
 }

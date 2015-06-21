@@ -2,7 +2,7 @@ Template.textTest.events
   'click button': (e, t) ->
     console.log 'Screenshot', t
     selector = '[data-role=\'screenshot\']'
-    screenshot = new RxScreenshot t, selector, 400
+    screenshot = new RxScreenshot t, selector, null, 400
     t.autorun ->
       if screenshot.ready()
         console.log 'Screenshot added'
@@ -45,3 +45,20 @@ Template.svgTest.onRendered ->
         y(d.value) + 3
       .attr 'dy', '.75em'
       .text (d) -> d.value
+
+Template.svgTest.events
+  'click button': (e, t) ->
+    console.log 'Screenshot', t
+    selector = 'svg.chart'
+    screenshot = new RxScreenshot t, selector
+    ,
+      rect: fill: 'steelblue'
+      text:
+        fill: 'white'
+        font: '10px sans-serif'
+        'text-anchor': 'middle'
+    , 400
+    t.autorun ->
+      if screenshot.ready()
+        console.log 'Screenshot added'
+        (t.$ selector).parent().append screenshot.getCanvas()
