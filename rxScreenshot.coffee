@@ -37,16 +37,13 @@ class @RxScreenshot extends ReactiveVar
       canvg @canvas, svg,
         ignoreMouse: true
         ignoreAnimation: true
-        renderCallback: =>
-          console.log 'SVG drawn'
-          @set true
+        renderCallback: => @set true
     else
       html2canvas blazeElement,
         width: width
         onrendered: (canvas) =>
           @canvas = canvas
           @set true
-          console.log 'Canvas', @canvas
   ###*
    * Reactive function that returns the state of the screenshot.
    * @return {Boolean} true if screenshot has been rendered, false otherwise.
@@ -61,7 +58,10 @@ class @RxScreenshot extends ReactiveVar
    * Get the content of the screenshot as a Buffer (see NodeJS).
    * @return {Buffer} Content of the screenshot.
   ###
-  getBuffer: -> @canvas
+  getBuffer: ->
+    img = @canvas.toDataURL()
+    data = img.replace /^data:image\/\w+;base64,/, ''
+    new Buffer data, 'base64'
 
 ###*
  * # Buffer

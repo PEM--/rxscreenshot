@@ -1,6 +1,6 @@
 
 
-<!-- Start rxScreenshot.coffee -->
+<!-- Start RxScreenshot.coffee -->
 
 # RxScreenshot: A reactive screenshot of your Blaze template.
 
@@ -48,5 +48,5 @@ Get the content of the screenshot as a Buffer (see NodeJS).
 
 Buffer is exposed in browser's global scope.
 
-<!-- End rxScreenshot.coffee -->
+<!-- End RxScreenshot.coffee -->
 
