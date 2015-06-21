@@ -21,6 +21,9 @@ meteor add pierreeric:rxscreenshot
 ### Contributions
 Contributions are very welcomed. Feel free to PR for enhancing this package.
 
+### Testing
+A test application is provided in the `app` folder.
+
 ### Enhancing documentation
 API's documentation uses [DocBlockr](https://atom.io/packages/docblockr) syntax.
 Generates the API's documentation using [markdox](https://github.com/cbou/markdox).
