@@ -1,0 +1,30 @@
+{
+  "name": "RxBufferDownload",
+  "version": "0.0.1",
+  "homepage": "https://github.com/PEM--/rxbufferdownload",
+  "authors": [
+    "Pierre-Eric Marchandet <pemarchandet@gmail.com>"
+  ],
+  "description": "Reactive binary downloader",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "buffer": "3.46.1",
+    "arraybuffer-to-buffer": "*",
+    "html2canvas": "0.5.0-alpha2"
+  },
+  "ignoredDependencies": [
+    "jquery"
+  ],
+  "overrides": {
+    "buffer": { "arch": [ "client" ] },
+    "arraybuffer-to-buffer": { "arch": [ "client" ] },
+    "html2canvas": { "arch": [ "client" ] }
+  }
+}
