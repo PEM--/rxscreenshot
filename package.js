@@ -1,6 +1,6 @@
 Package.describe({
   name: 'pierreeric:rxscreenshot',
-  version: '0.0.2',
+  version: '0.0.3',
   summary: 'Create reactively a PNG as a Buffer from elements within your Blaze template.',
   git: 'https://github.com/PEM--/rxscreenshot.git',
   documentation: 'README.md'

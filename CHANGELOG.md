@@ -1,3 +1,6 @@
+# 0.0.3 - Remove unwanted traces
+* Remove console.log from package.
+
 # 0.0.2 - jQuery size calculations
 * Fix wrong getBBox value using jQuery.
 

@@ -38,7 +38,6 @@ class @RxScreenshot extends ReactiveVar
         ignoreAnimation: true
         renderCallback: => @set true
     else
-      console.log 'Canvas', "#{$blazeElement.width()}x#{$blazeElement.height()}"
       html2canvas $blazeElement,
         width: if width is null then $blazeElement.width() else width
         height: $blazeElement.height()
