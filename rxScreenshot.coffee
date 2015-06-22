@@ -18,15 +18,14 @@ class @RxScreenshot extends ReactiveVar
   ###
   constructor: (tpl, el, styles = null, width = null) ->
     super false
-    blazeElement = tpl.find el
-    if blazeElement.nodeName is 'svg'
+    $blazeElement = tpl.$ el
+    if $blazeElement[0].nodeName is 'svg'
       # Create an off-screen canvas
       @canvas = document.createElement 'canvas'
-      boundingBox = blazeElement.getBBox()
-      @canvas.width = if width is null then boundingBox.width else width
-      @canvas.height = boundingBox.height
+      @canvas.width = if width is null then $blazeElement.width() else width
+      @canvas.height = $blazeElement.height()
       # Clone content that need to get drawn
-      clone = (tpl.$ el).clone()
+      clone = $blazeElement.clone()
       # Inject styles
       unless styles is null
         for key, value of styles
@@ -39,8 +38,10 @@ class @RxScreenshot extends ReactiveVar
         ignoreAnimation: true
         renderCallback: => @set true
     else
-      html2canvas blazeElement,
-        width: width
+      console.log 'Canvas', "#{$blazeElement.width()}x#{$blazeElement.height()}"
+      html2canvas $blazeElement,
+        width: if width is null then $blazeElement.width() else width
+        height: $blazeElement.height()
         onrendered: (canvas) =>
           @canvas = canvas
           @set true
