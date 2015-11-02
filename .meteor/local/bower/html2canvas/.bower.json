@@ -7,14 +7,14 @@
     ".travis.yml"
   ],
   "homepage": "https://github.com/niklasvh/html2canvas",
-  "version": "0.5.0-alpha2",
-  "_release": "0.5.0-alpha2",
+  "version": "0.5.0-beta1",
+  "_release": "0.5.0-beta1",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.0-alpha2",
-    "commit": "9a0d43d60bb67ef22507cc12cadead19645c990b"
+    "tag": "v0.5.0-beta1",
+    "commit": "6596231b33b73b2d9956616f7eab7aa38cfcb95d"
   },
   "_source": "git://github.com/niklasvh/html2canvas.git",
-  "_target": "0.5.0-alpha2",
+  "_target": "0.5.0-beta1",
   "_originalSource": "html2canvas"
 }

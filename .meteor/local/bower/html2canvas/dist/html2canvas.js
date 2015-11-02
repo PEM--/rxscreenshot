@@ -1542,85 +1542,63 @@ process.umask = function() { return 0; };
 var log = require('./log');
 var Promise = require('./promise');
 
-var html2canvasCanvasCloneAttribute = "data-html2canvas-canvas-clone";
-var html2canvasCanvasCloneIndex = 0;
-
-function cloneNodeValues(document, clone, nodeName) {
-    var originalNodes = document.getElementsByTagName(nodeName);
-    var clonedNodes = clone.getElementsByTagName(nodeName);
-    var count = originalNodes.length;
-    for (var i = 0; i < count; i++) {
-        clonedNodes[i].value = originalNodes[i].value;
-    }
-}
-
 function restoreOwnerScroll(ownerDocument, x, y) {
     if (ownerDocument.defaultView && (x !== ownerDocument.defaultView.pageXOffset || y !== ownerDocument.defaultView.pageYOffset)) {
         ownerDocument.defaultView.scrollTo(x, y);
     }
 }
 
-function labelCanvasElements(ownerDocument) {
-    [].slice.call(ownerDocument.querySelectorAll("canvas"), 0).forEach(function(canvas) {
-        canvas.setAttribute(html2canvasCanvasCloneAttribute, "canvas-" + html2canvasCanvasCloneIndex++);
-    });
-}
-
-function cloneCanvasContents(ownerDocument, documentClone) {
-    [].slice.call(ownerDocument.querySelectorAll("[" + html2canvasCanvasCloneAttribute + "]"), 0).forEach(function(canvas) {
-        try {
-            var clonedCanvas = documentClone.querySelector('[' + html2canvasCanvasCloneAttribute + '="' + canvas.getAttribute(html2canvasCanvasCloneAttribute) + '"]');
-            if (clonedCanvas) {
-                clonedCanvas.width = canvas.width;
-                clonedCanvas.height = canvas.height;
-                clonedCanvas.getContext("2d").putImageData(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height), 0, 0);
-            }
-        } catch(e) {
-            log("Unable to copy canvas content from", canvas, e);
+function cloneCanvasContents(canvas, clonedCanvas) {
+    try {
+        if (clonedCanvas) {
+            clonedCanvas.width = canvas.width;
+            clonedCanvas.height = canvas.height;
+            clonedCanvas.getContext("2d").putImageData(canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height), 0, 0);
         }
-        canvas.removeAttribute(html2canvasCanvasCloneAttribute);
-    });
+    } catch(e) {
+        log("Unable to copy canvas content from", canvas, e);
+    }
 }
 
-function removeScriptNodes(parent) {
-    [].slice.call(parent.childNodes, 0).filter(isElementNode).forEach(function(node) {
-        if (node.tagName === "SCRIPT") {
-            parent.removeChild(node);
-        } else {
-            removeScriptNodes(node);
-        }
-    });
-    return parent;
-}
-
-function isIE9() {
-    return document.documentMode && document.documentMode <= 9;
-}
-
-// https://github.com/niklasvh/html2canvas/issues/503
-function cloneNodeIE9(node, javascriptEnabled) {
+function cloneNode(node, javascriptEnabled) {
     var clone = node.nodeType === 3 ? document.createTextNode(node.nodeValue) : node.cloneNode(false);
 
     var child = node.firstChild;
     while(child) {
         if (javascriptEnabled === true || child.nodeType !== 1 || child.nodeName !== 'SCRIPT') {
-            clone.appendChild(cloneNodeIE9(child, javascriptEnabled));
+            clone.appendChild(cloneNode(child, javascriptEnabled));
         }
         child = child.nextSibling;
+    }
+
+    if (node.nodeType === 1) {
+        clone._scrollTop = node.scrollTop;
+        clone._scrollLeft = node.scrollLeft;
+        if (node.nodeName === "CANVAS") {
+            cloneCanvasContents(node, clone);
+        } else if (node.nodeName === "TEXTAREA" || node.nodeName === "SELECT") {
+            clone.value = node.value;
+        }
     }
 
     return clone;
 }
 
+function initNode(node) {
+    if (node.nodeType === 1) {
+        node.scrollTop = node._scrollTop;
+        node.scrollLeft = node._scrollLeft;
 
-
-function isElementNode(node) {
-    return node.nodeType === Node.ELEMENT_NODE;
+        var child = node.firstChild;
+        while(child) {
+            initNode(child);
+            child = child.nextSibling;
+        }
+    }
 }
 
 module.exports = function(ownerDocument, containerDocument, width, height, options, x ,y) {
-    labelCanvasElements(ownerDocument);
-    var documentElement = isIE9() ? cloneNodeIE9(ownerDocument.documentElement, options.javascriptEnabled) : ownerDocument.documentElement.cloneNode(true);
+    var documentElement = cloneNode(ownerDocument.documentElement, options.javascriptEnabled);
     var container = containerDocument.createElement("iframe");
 
     container.className = "html2canvas-container";
@@ -1637,19 +1615,21 @@ module.exports = function(ownerDocument, containerDocument, width, height, optio
     return new Promise(function(resolve) {
         var documentClone = container.contentWindow.document;
 
-        cloneNodeValues(ownerDocument.documentElement, documentElement, "textarea");
-        cloneNodeValues(ownerDocument.documentElement, documentElement, "select");
-
         /* Chrome doesn't detect relative background-images assigned in inline <style> sheets when fetched through getComputedStyle
          if window url is about:blank, we can assign the url to current by writing onto the document
          */
         container.contentWindow.onload = container.onload = function() {
             var interval = setInterval(function() {
                 if (documentClone.body.childNodes.length > 0) {
-                    cloneCanvasContents(ownerDocument, documentClone);
+                    initNode(documentClone.documentElement);
                     clearInterval(interval);
                     if (options.type === "view") {
                         container.contentWindow.scrollTo(x, y);
+                        if ((/(iPad|iPhone|iPod)/g).test(navigator.userAgent) && (container.contentWindow.scrollY !== y || container.contentWindow.scrollX !== x)) {
+                            documentClone.documentElement.style.top = (-y) + "px";
+                            documentClone.documentElement.style.left = (-x) + "px";
+                            documentClone.documentElement.style.position = 'absolute';
+                        }
                     }
                     resolve(container);
                 }
@@ -1660,7 +1640,7 @@ module.exports = function(ownerDocument, containerDocument, width, height, optio
         documentClone.write("<!DOCTYPE html><html></html>");
         // Chrome scrolls the parent document for some reason after the write to the cloned window???
         restoreOwnerScroll(ownerDocument, x, y);
-        documentClone.replaceChild(options.javascriptEnabled === true ? documentClone.adoptNode(documentElement) : removeScriptNodes(documentClone.adoptNode(documentElement)), documentClone.documentElement);
+        documentClone.replaceChild(documentClone.adoptNode(documentElement), documentClone.documentElement);
         documentClone.close();
     });
 };
@@ -1998,9 +1978,17 @@ html2canvas.NodeContainer = NodeContainer;
 html2canvas.log = log;
 html2canvas.utils = utils;
 
-module.exports = (typeof(document) === "undefined" || typeof(Object.create) !== "function" || typeof(document.createElement("canvas").getContext) !== "function") ? function() {
+var html2canvasExport = (typeof(document) === "undefined" || typeof(Object.create) !== "function" || typeof(document.createElement("canvas").getContext) !== "function") ? function() {
     return Promise.reject("No canvas support");
 } : html2canvas;
+
+module.exports = html2canvasExport;
+
+if (typeof(define) === 'function' && define.amd) {
+    define('html2canvas', [], function() {
+        return html2canvasExport;
+    });
+}
 
 function renderDocument(document, options, windowWidth, windowHeight, html2canvasIndex) {
     return createWindowClone(document, document, windowWidth, windowHeight, options, document.defaultView.pageXOffset, document.defaultView.pageYOffset).then(function(container) {
@@ -2424,6 +2412,8 @@ module.exports = ImageLoader;
 var GradientContainer = require('./gradientcontainer');
 var Color = require('./color');
 
+var COLOR_STOP_REGEXP = /^\s*(.*)\s*(\d{1,3})?(%|px)?$/;
+
 function LinearGradientContainer(imageData) {
     GradientContainer.apply(this, arguments);
     this.type = this.TYPES.LINEAR;
@@ -2464,13 +2454,15 @@ function LinearGradientContainer(imageData) {
         this.y1 = 1;
     }
 
-    this.colorStops = imageData.args.slice(hasDirection ? 1 : 0).map(function(colorStop) {
-        var colorStopMatch = colorStop.match(this.stepRegExp);
-        return {
-            color: new Color(colorStopMatch[1]),
-            stop: colorStopMatch[3] === "%" ? colorStopMatch[2] / 100 : null
-        };
-    }, this);
+    this.colorStops = imageData.args.slice(hasDirection ? 1 : 0)
+        .map(function(colorStop) { return colorStop.match(COLOR_STOP_REGEXP);})
+        .filter(function(colorStopMatch) { return !!colorStopMatch;})
+        .map(function(colorStopMatch) {
+            return {
+                color: new Color(colorStopMatch[1]),
+                stop: colorStopMatch[3] === "%" ? colorStopMatch[2] / 100 : null
+            };
+        });
 
     if (this.colorStops[0].stop === null) {
         this.colorStops[0].stop = 0;
@@ -2768,7 +2760,7 @@ NodeContainer.prototype.getValue = function() {
     return value.length === 0 ? (this.node.placeholder || "") : value;
 };
 
-NodeContainer.prototype.MATRIX_PROPERTY = /(matrix)\((.+)\)/;
+NodeContainer.prototype.MATRIX_PROPERTY = /(matrix|matrix3d)\((.+)\)/;
 NodeContainer.prototype.TEXT_SHADOW_PROPERTY = /((rgba|rgb)\([^\)]+\)(\s-?\d+px){0,})/g;
 NodeContainer.prototype.TEXT_SHADOW_VALUES = /(-?\d+px)|(#.+)|(rgb\(.+\))|(rgba\(.+\))/g;
 NodeContainer.prototype.CLIP = /^rect\((\d+)px,? (\d+)px,? (\d+)px,? (\d+)px\)$/;
@@ -2783,6 +2775,11 @@ function parseMatrix(match) {
         return match[2].split(",").map(function(s) {
             return parseFloat(s.trim());
         });
+    } else if (match && match[1] === "matrix3d") {
+        var matrix3d = match[2].split(",").map(function(s) {
+          return parseFloat(s.trim());
+        });
+        return [matrix3d[0], matrix3d[1], matrix3d[4], matrix3d[5], matrix3d[12], matrix3d[13]];
     }
 }
 
@@ -3420,14 +3417,14 @@ function calculateCurvePoints(bounds, borderRadius, borders) {
         width = bounds.width,
         height = bounds.height,
 
-        tlh = borderRadius[0][0],
-        tlv = borderRadius[0][1],
-        trh = borderRadius[1][0],
-        trv = borderRadius[1][1],
-        brh = borderRadius[2][0],
-        brv = borderRadius[2][1],
-        blh = borderRadius[3][0],
-        blv = borderRadius[3][1];
+        tlh = borderRadius[0][0] < width / 2 ? borderRadius[0][0] : width / 2,
+        tlv = borderRadius[0][1] < height / 2 ? borderRadius[0][1] : height / 2,
+        trh = borderRadius[1][0] < width / 2 ? borderRadius[1][0] : width / 2,
+        trv = borderRadius[1][1] < height / 2 ? borderRadius[1][1] : height / 2,
+        brh = borderRadius[2][0] < width / 2 ? borderRadius[2][0] : width / 2,
+        brv = borderRadius[2][1] < height / 2 ? borderRadius[2][1] : height / 2,
+        blh = borderRadius[3][0] < width / 2 ? borderRadius[3][0] : width / 2,
+        blv = borderRadius[3][1] < height / 2 ? borderRadius[3][1] : height / 2;
 
     var topWidth = width - trh,
         rightHeight = height - brv,

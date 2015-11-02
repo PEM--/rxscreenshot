@@ -1,3 +1,7 @@
+# 0.1.0 - Meteor 1.2.1
+* Package bumped
+* Example app updated
+
 # 0.0.3 - Remove unwanted traces
 * Remove console.log from package.
 
